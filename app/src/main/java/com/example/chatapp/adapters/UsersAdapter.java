@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.chatapp.databinding.ItemContainerUserBinding;
+import com.example.chatapp.listeners.UserListener;
 import com.example.chatapp.models.User;
 
 import java.util.List;
@@ -17,9 +18,10 @@ import java.util.List;
 public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserViewHolder> {
 
     private final List<User> users;
-
-    public UsersAdapter(List<User> users) {
+    private final UserListener userListener;
+    public UsersAdapter(List<User> users, UserListener usersListener) {
         this.users = users;
+        this.userListener = usersListener;
     }
 
     @NonNull
@@ -55,6 +57,7 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserViewHold
         void setUserData(User user) {
             binding.textUserName.setText(user.name);
             binding.imgProfile.setImageBitmap(getUserImage(user.image));
+            binding.getRoot().setOnClickListener(v -> userListener.onUserClicked(user));
         }
     }
 

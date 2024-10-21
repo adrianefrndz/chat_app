@@ -1,5 +1,6 @@
 package com.example.chatapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
@@ -11,6 +12,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.chatapp.adapters.UsersAdapter;
 import com.example.chatapp.databinding.ActivityUsersBinding;
+import com.example.chatapp.listeners.UserListener;
 import com.example.chatapp.models.User;
 import com.example.chatapp.utilities.Constants;
 import com.example.chatapp.utilities.PreferenceManager;
@@ -20,7 +22,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UsersActivity extends AppCompatActivity {
+public class UsersActivity extends AppCompatActivity implements UserListener {
 
     private ActivityUsersBinding binding;
     private PreferenceManager preferenceManager;
@@ -39,6 +41,7 @@ public class UsersActivity extends AppCompatActivity {
     private void setListeners() {
         binding.btnBack.setOnClickListener(v -> onBackPressed());
     }
+
     public void loading(Boolean isLoading) {
         if (isLoading) {
             binding.progressBar.setVisibility(View.VISIBLE);
@@ -50,7 +53,7 @@ public class UsersActivity extends AppCompatActivity {
     //get all users
     private void getUsers() {
        loading(true);
-        FirebaseFirestore database = FirebaseFirestore.getInstance();
+        FirebaseFirestore database = FirebaseFirestore.getInstance();  // get info from FirebaseStore
         database.collection(Constants.KEY_COLLECTION_USERS)
                 .get()
                 .addOnCompleteListener(task -> {
@@ -69,7 +72,7 @@ public class UsersActivity extends AppCompatActivity {
                             users.add(user);
                         }
                         if (users.size() > 0) {
-                            UsersAdapter usersAdapter = new UsersAdapter(users);
+                            UsersAdapter usersAdapter = new UsersAdapter(users, this);
                             binding.usersRecyclerView.setAdapter(usersAdapter);
                             binding.usersRecyclerView.setVisibility(View.VISIBLE);
                         } else {
@@ -86,4 +89,12 @@ public class UsersActivity extends AppCompatActivity {
         binding.textErrorMessage.setVisibility(View.VISIBLE);
     }
 
+    // by the use of userListener interface, this method will be called when a user is clicked
+    @Override
+    public void onUserClicked(User user) {
+        Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+        intent.putExtra(Constants.KEY_USER, user);
+        startActivity(intent);
+        finish();
+    }
 }

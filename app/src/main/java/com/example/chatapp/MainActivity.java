@@ -29,8 +29,6 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private PreferenceManager preferenceManager;
 
-    //Change 1
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,8 +71,8 @@ public class MainActivity extends AppCompatActivity {
                 );
         documentReference.update(Constants.KEY_FCM_TOKEN, token)
                 .addOnFailureListener(e -> showToast("Unable to update token"));
-
     }
+
     private void signOut() {
         showToast("Signing out...");
         FirebaseFirestore database = FirebaseFirestore.getInstance();
