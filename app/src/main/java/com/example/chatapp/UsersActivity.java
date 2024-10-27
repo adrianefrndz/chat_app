@@ -38,8 +38,18 @@ public class UsersActivity extends AppCompatActivity implements UserListener {
         getUsers();
     }
 
+    // by the use of userListener interface, this method will be called when a user is clicked
+    @Override
+    public void onUserClicked(User user) {
+        Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+        intent.putExtra(Constants.KEY_USER, user);
+        startActivity(intent);
+        finish();
+    }
+
     private void setListeners() {
-        binding.btnBack.setOnClickListener(v -> onBackPressed());
+        binding.btnBack.setOnClickListener(v ->
+                startActivity(new Intent(getApplicationContext(), MainActivity.class)));
     }
 
     public void loading(Boolean isLoading) {
@@ -61,6 +71,8 @@ public class UsersActivity extends AppCompatActivity implements UserListener {
                     String currentUserId = preferenceManager.getString(Constants.KEY_USER_ID);
                     if (task.isSuccessful() && task.getResult() != null) {
                         List<User> users = new ArrayList<>();
+
+                        // in this for-loop, it stores all the users from the database in a recyclerview
                         for (QueryDocumentSnapshot queryDocumentSnapshot : task.getResult()) {
                             if(currentUserId.equals(queryDocumentSnapshot.getId())) {
                                 continue;
@@ -69,14 +81,12 @@ public class UsersActivity extends AppCompatActivity implements UserListener {
                             user.name = queryDocumentSnapshot.getString(Constants.KEY_NAME);
                             user.image = queryDocumentSnapshot.getString(Constants.KEY_IMAGE);
                             user.token = queryDocumentSnapshot.getString(Constants.KEY_FCM_TOKEN);
+                            user.id = queryDocumentSnapshot.getId();
                             users.add(user);
-                        }
-                        if (users.size() > 0) {
+
                             UsersAdapter usersAdapter = new UsersAdapter(users, this);
                             binding.usersRecyclerView.setAdapter(usersAdapter);
                             binding.usersRecyclerView.setVisibility(View.VISIBLE);
-                        } else {
-                            showErrorMessage();
                         }
                     }
                     else {
@@ -84,17 +94,9 @@ public class UsersActivity extends AppCompatActivity implements UserListener {
                     }
                 });
     }
+
     public void showErrorMessage() {
         binding.textErrorMessage.setText(String.format("No user available"));
         binding.textErrorMessage.setVisibility(View.VISIBLE);
-    }
-
-    // by the use of userListener interface, this method will be called when a user is clicked
-    @Override
-    public void onUserClicked(User user) {
-        Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
-        intent.putExtra(Constants.KEY_USER, user);
-        startActivity(intent);
-        finish();
     }
 }

@@ -17,6 +17,7 @@ import com.example.chatapp.databinding.ActivityMainBinding;
 import com.example.chatapp.utilities.Constants;
 import com.example.chatapp.utilities.PreferenceManager;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         binding.btnLogOut.setOnClickListener(v -> signOut());
         binding.btnAdd.setOnClickListener(v ->{
             startActivity(new Intent(getApplicationContext(),UsersActivity.class));
+
         });
     }
     private void loadUserDetails() {

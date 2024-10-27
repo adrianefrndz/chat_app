@@ -35,6 +35,7 @@ public class SignUpActivity extends AppCompatActivity {
     private ActivitySignUpBinding binding;
     private PreferenceManager preferenceManager;
     private String encodedImage;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,19 +72,19 @@ public class SignUpActivity extends AppCompatActivity {
         loading(true);
         FirebaseFirestore database = FirebaseFirestore.getInstance();
 
-        //HashMap<> - It's useful for storing data where you may have a variety of
+        // HashMap<> - It's useful for storing data where you may have a variety of
         // value types but want to easily access them using string keys.
         HashMap<String, Object> user = new HashMap<>();
         user.put(Constants.KEY_NAME, binding.textUserName.getText().toString());
         user.put(Constants.KEY_PASSWORD, binding.textPassword.getText().toString());
         user.put(Constants.KEY_IMAGE, encodedImage);
-
+        user.put(Constants.KEY_USER_ID, preferenceManager.getString(Constants.KEY_USER_ID));
         // it will add user details to the database under the KEY_COLLECTION_USERS "user"
         database.collection(Constants.KEY_COLLECTION_USERS)
                 .add(user)
+
                 .addOnSuccessListener(documentReference -> {
                     loading(false);
-
                     preferenceManager.putBoolean(Constants.KEY_IS_SIGNED_IN, true);
                     preferenceManager.putString(Constants.KEY_USER_ID, documentReference.getId());
                     preferenceManager.putString(Constants.KEY_NAME, binding.textUserName.getText().toString());
@@ -105,8 +106,8 @@ public class SignUpActivity extends AppCompatActivity {
 
         // ByteArrayOutputStream is used to hold the compressed image data in memory.
         // The compress() method compresses the scaled bitmap into JPEG format.
-        //  Converts the contents of the ByteArrayOutputStream into a byte array,
-        //  which represents the compressed image.
+        // Converts the contents of the ByteArrayOutputStream into a byte array,
+        // which represents the compressed image.
         // Base64 is commonly used to represent binary data (like images) in a text format,
         // which is useful when transmitting or storing images in text-based formats (e.g., JSON, XML).
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -115,11 +116,14 @@ public class SignUpActivity extends AppCompatActivity {
         return Base64.encodeToString(bytes, Base64.DEFAULT);
     }
 
-    // This is a new, more modern API introduced in Android for launching activities and handling the results.
-    // It's a type-safe replacement for the older startActivityForResult() method.
-    // registerForActivityResult(): This method registers the launcher with an activity result
-    // contract and a callback to handle the result when the activity finishes.
-    //
+    // ActivityResultLauncher<Intent> is used in Android to handle results from activities
+    // Register the ActivityResultLauncher: This step ensures your app is ready to handle
+    // the result when an activity (like selecting an image) finishes.
+    // The user picks an image from the gallery using an Intent.
+    // The ActivityResultLauncher gets the result and the URI of the image.
+    // An InputStream is created to read the image data from the URI.
+    // BitmapFactory.decodeStream() converts the image data into a Bitmap.
+    // The Bitmap is then set to an ImageView to display the selected image.
     private final ActivityResultLauncher<Intent> pickImage = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {

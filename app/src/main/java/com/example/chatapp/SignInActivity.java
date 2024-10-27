@@ -32,8 +32,16 @@ public class SignInActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setListeners();
+        checkLoginState();
     }
 
+    private void checkLoginState() {
+        if (preferenceManager.getBoolean("isSignedIn")) {
+            // Go directly to ChatActivity or MainActivity
+            startActivity(new Intent(SignInActivity.this, MainActivity.class));
+            finish();
+        }
+    }
     private void setListeners() {
         binding.textCreateAccount.setOnClickListener(view ->
             startActivity(new Intent(getApplicationContext(), SignUpActivity.class)));
@@ -43,6 +51,7 @@ public class SignInActivity extends AppCompatActivity {
             }
         });
     }
+
     private void signIn() {
         loading(true);
         FirebaseFirestore database = FirebaseFirestore.getInstance();
@@ -57,10 +66,10 @@ public class SignInActivity extends AppCompatActivity {
                 // addCompleteListener checks whether the database query is successful or not
                 .addOnCompleteListener(task -> {
                    if (task.isSuccessful() && task.getResult() != null
-                        && task.getResult().getDocuments().size() > 0) {
+                        && !task.getResult().getDocuments().isEmpty()) {
 
                        // since the queries are successful and if statement is true, do the following:
-                       // DocumentSnapshot is an object that holds the data of this specific user document in Firestore
+                       // DocumentSnapshot is an object that holds the data of this specific user document in FireStore
                        // FLAG_ACTIVITY_NEW_TASK - This flag indicates that the activity should be started in a new task.
                        // A task in Android represents a collection of activities that the user interacts with.
                        // It removes all the activities in the current task that were previously running,
@@ -68,6 +77,7 @@ public class SignInActivity extends AppCompatActivity {
                        // getApplicationContext(): Refers to the application context,
                        // which is tied to the lifecycle of the entire application and is not specific to any single activity.
                        // getApplicationContext() is safer if the activity might be destroyed
+
                        DocumentSnapshot documentSnapshot = task.getResult().getDocuments().get(0);
                        preferenceManager.putBoolean(Constants.KEY_IS_SIGNED_IN, true);
                        preferenceManager.putString(Constants.KEY_USER_ID, documentSnapshot.getId());
