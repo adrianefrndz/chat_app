@@ -50,7 +50,6 @@ public class ChatActivity extends AppCompatActivity {
         setListeners();
         init();
         listenMessages();
-
     }
 
     private void showToast(String message) {
@@ -102,11 +101,7 @@ public class ChatActivity extends AppCompatActivity {
     };
 
     public void loading(Boolean isLoading) {
-        if (isLoading) {
-            binding.progressBar.setVisibility(View.VISIBLE);
-        } else {
-            binding.progressBar.setVisibility(View.INVISIBLE);
-        }
+        binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.INVISIBLE);
     }
 
     private Bitmap getBitmapFromEncodedString (String encodedImage) {
