@@ -18,7 +18,9 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.chatapp.adapters.ChatAdapter;
 import com.example.chatapp.adapters.RecentConversationAdapter;
 import com.example.chatapp.databinding.ActivityMainBinding;
+import com.example.chatapp.listeners.ConversationListener;
 import com.example.chatapp.models.ChatMessage;
+import com.example.chatapp.models.User;
 import com.example.chatapp.utilities.Constants;
 import com.example.chatapp.utilities.PreferenceManager;
 import com.google.firebase.firestore.DocumentChange;
@@ -36,7 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity implements ConversationListener {
 
     private ActivityMainBinding binding;
     private PreferenceManager preferenceManager;
@@ -67,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void init() {
         conversation = new ArrayList<>();
-        conversationsAdapter = new RecentConversationAdapter(conversation);
+        conversationsAdapter = new RecentConversationAdapter(conversation, this);
         binding.conversationRecyclerView.setAdapter(conversationsAdapter);
         database = FirebaseFirestore.getInstance();
     }
@@ -96,6 +98,13 @@ public class MainActivity extends AppCompatActivity {
                 );
         documentReference.update(Constants.KEY_FCM_TOKEN, token)
                 .addOnFailureListener(e -> showToast("Unable to update token"));
+    }
+
+    @Override
+    public void onConversationClicked(User user) {
+        Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+        intent.putExtra(Constants.KEY_USER, user);
+        startActivity(intent);
     }
 
     private void signOut() {

@@ -32,8 +32,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends BaseActivity {
 
     private ActivityChatBinding binding;
     private User receiverUser;
@@ -42,6 +43,7 @@ public class ChatActivity extends AppCompatActivity {
     private FirebaseFirestore database;
     private PreferenceManager preferenceManager;
     private String conversationId = null;
+    private Boolean isReceiverAvailable = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,9 +59,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void setListeners() {
-        binding.btnBack.setOnClickListener(v -> {
-            startActivity(new Intent(this.getApplicationContext(), UsersActivity.class));
-        });
+        binding.btnBack.setOnClickListener(v -> onBackPressed());
 
         binding.btnSend.setOnClickListener(v -> {
             sendMessage();
@@ -100,6 +100,27 @@ public class ChatActivity extends AppCompatActivity {
                 .whereEqualTo(Constants.KEY_SENDER_ID, receiverUser.id)
                 .whereEqualTo(Constants.KEY_RECEIVER_ID, preferenceManager.getString(Constants.KEY_USER_ID))
                 .addSnapshotListener(eventListener);
+    }
+
+    private void listenAvailability() {
+        database.collection(Constants.KEY_COLLECTION_USERS).document(
+                receiverUser.id
+        ).addSnapshotListener(ChatActivity.this, (value, error) -> {
+            if (error != null) {
+                return;
+            }
+            if ((value != null) && (value.getLong(Constants.KEY_AVAILABILITY) != null)) {
+                int availability = Objects.requireNonNull(
+                        value.getLong(Constants.KEY_AVAILABILITY)
+                ).intValue();
+                isReceiverAvailable = availability == 1;
+            }
+            if (isReceiverAvailable) {
+                binding.textAvailability.setVisibility(View.VISIBLE);
+            } else {
+                binding.textAvailability.setVisibility(View.INVISIBLE);
+            }
+        });
     }
 
     // EventListener<QuerySnapshot> eventListener is a function that defines what happens when data changes.
@@ -241,5 +262,11 @@ public class ChatActivity extends AppCompatActivity {
                     Log.d("Firestore", "Conversation added with ID: " + documentReference.getId());
                     conversationId = documentReference.getId();
                 });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        listenAvailability();
     }
 }

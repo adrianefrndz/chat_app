@@ -28,6 +28,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
+    <TextView
+        android:id="@+id/textAvailability"
+        android:layout_width="@dimen/_8sdp"
+        android:layout_height="@dimen/_8sdp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/btnBack"
+        app:layout_constraintBottom_toBottomOf="@+id/btnBack"
+        android:layout_marginTop="@dimen/_8sdp"
+        android:layout_marginStart="@dimen/_2sdp"
+        android:background="@drawable/online"
+        android:visibility="invisible"/>
+
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/btnBack"
         android:layout_width="@dimen/_22sdp"
@@ -42,15 +54,15 @@
         android:id="@+id/textUserName"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="@dimen/_8sdp"
-        android:layout_marginEnd="@dimen/_8sdp"
+        android:layout_marginStart="@dimen/_2sdp"
+        android:layout_marginEnd="@dimen/_12sdp"
         android:text="Name"
         android:textSize="@dimen/_18sdp"
         android:textColor="#E0F2F2F2"
         android:fontFamily="@font/calibri_bold"
         android:gravity="center"
         app:layout_constraintTop_toTopOf="@id/btnBack"
-        app:layout_constraintStart_toEndOf="@+id/btnBack"
+        app:layout_constraintStart_toEndOf="@+id/textAvailability"
         app:layout_constraintBottom_toBottomOf="@+id/btnBack"
         app:layout_constraintEnd_toStartOf="@+id/userInfo"/>
 
