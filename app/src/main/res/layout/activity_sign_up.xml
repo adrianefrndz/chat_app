@@ -113,7 +113,7 @@
                 android:layout_height="@dimen/_36sdp"
                 android:background="@drawable/button_border"
                 android:fontFamily="@font/calibri_bold"
-                android:textColor="#2C1C4D"
+                android:textColor="#AE000000"
                 android:text="SIGN UP"
                 android:textStyle="bold"
                 android:textSize="@dimen/_12sdp"

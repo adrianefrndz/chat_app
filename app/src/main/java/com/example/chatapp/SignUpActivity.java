@@ -20,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.chatapp.databinding.ActivitySignInBinding;
 import com.example.chatapp.databinding.ActivitySignUpBinding;
+import com.example.chatapp.models.User;
 import com.example.chatapp.utilities.Constants;
 import com.example.chatapp.utilities.PreferenceManager;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -35,6 +36,7 @@ public class SignUpActivity extends AppCompatActivity {
     private ActivitySignUpBinding binding;
     private PreferenceManager preferenceManager;
     private String encodedImage;
+    private User currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,14 +73,14 @@ public class SignUpActivity extends AppCompatActivity {
     private void signUp() {
         loading(true);
         FirebaseFirestore database = FirebaseFirestore.getInstance();
-
         // HashMap<> - It's useful for storing data where you may have a variety of
         // value types but want to easily access them using string keys.
+
         HashMap<String, Object> user = new HashMap<>();
         user.put(Constants.KEY_NAME, binding.textUserName.getText().toString());
         user.put(Constants.KEY_PASSWORD, binding.textPassword.getText().toString());
         user.put(Constants.KEY_IMAGE, encodedImage);
-        user.put(Constants.KEY_USER_ID, preferenceManager.getString(Constants.KEY_USER_ID));
+        user.put(Constants.KEY_USER_ID, database.collection(Constants.KEY_USER_ID).document().getId());
         // it will add user details to the database under the KEY_COLLECTION_USERS "user"
         database.collection(Constants.KEY_COLLECTION_USERS)
                 .add(user)

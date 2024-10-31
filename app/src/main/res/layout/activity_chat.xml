@@ -139,6 +139,7 @@
         android:layout_marginRight="@dimen/_8sdp"
         android:padding="@dimen/_10sdp"
         android:background="@drawable/message_input_bg"
+        android:textColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/btnBg"
         app:layout_constraintStart_toStartOf="parent"/>

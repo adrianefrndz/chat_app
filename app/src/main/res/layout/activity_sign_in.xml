@@ -82,9 +82,9 @@
                 android:fontFamily="@font/calibri_bold"
                 android:text="SIGN IN"
                 android:textStyle="bold"
-                android:textColor="#2C1C4D"
+                android:textColor="#AE000000"
                 android:textSize="@dimen/_12sdp"
-                android:backgroundTint="#151B38"/>
+                android:backgroundTint="#6B293249"/>
 
             <ProgressBar
                 android:id="@+id/progressBar"
