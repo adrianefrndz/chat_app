@@ -141,7 +141,7 @@ public class ChatActivity extends BaseActivity {
                     chatMessages.add(chatMessage);
                 }
             }
-            Collections.sort(chatMessages, (object1, object2) -> object1.dateTime.compareTo(object2.dateTime));
+            Collections.sort(chatMessages, (object1, object2) -> object1.dateObject.compareTo(object2.dateObject));
             if (count == 0) {
                 chatAdapter.notifyDataSetChanged();
             } else {
