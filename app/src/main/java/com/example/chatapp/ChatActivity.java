@@ -1,8 +1,13 @@
 package com.example.chatapp;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -10,6 +15,8 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.fragment.app.FragmentManager;
 
 import com.example.chatapp.adapters.ChatAdapter;
 import com.example.chatapp.databinding.ActivityChatBinding;
@@ -22,8 +29,10 @@ import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.EventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -59,11 +68,24 @@ public class ChatActivity extends BaseActivity {
     }
 
     private void setListeners() {
+
+        binding.userInfo.setOnClickListener(v -> showInfoFragment());
         binding.btnBack.setOnClickListener(v -> onBackPressed());
 
         binding.btnSend.setOnClickListener(v -> {
-            sendMessage();
+            if(!binding.messageInput.getText().toString().isEmpty()
+            || !(binding.messageInput.getText() == null)){
+                sendMessage();
+                Log.d("Availability", "Available: " + isReceiverAvailable);
+                getLastMessage();
+            }
         });
+    }
+
+    private void showInfoFragment() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        UserInfoFragment infoFragment = new UserInfoFragment(receiverUser);
+        infoFragment.show(fragmentManager, "info_fragment");
     }
 
     private void loadReceiverDetails() {
@@ -109,11 +131,14 @@ public class ChatActivity extends BaseActivity {
             if (error != null) {
                 return;
             }
-            if ((value != null) && (value.getLong(Constants.KEY_AVAILABILITY) != null)) {
-                int availability = Objects.requireNonNull(
-                        value.getLong(Constants.KEY_AVAILABILITY)
-                ).intValue();
-                isReceiverAvailable = availability == 1;
+            if (value != null) {
+                if (value.getLong(Constants.KEY_AVAILABILITY) != null) {
+                    int availability = Objects.requireNonNull(
+                            value.getLong(Constants.KEY_AVAILABILITY)
+                    ).intValue();
+                    isReceiverAvailable = availability == 1;
+                }
+                receiverUser.token = value.getString(Constants.KEY_FCM_TOKEN);
             }
             if (isReceiverAvailable) {
                 binding.textAvailability.setVisibility(View.VISIBLE);
@@ -163,6 +188,7 @@ public class ChatActivity extends BaseActivity {
         message.put(Constants.KEY_RECEIVER_ID, receiverUser.id);
         message.put(Constants.KEY_MESSAGE, binding.messageInput.getText().toString());
         message.put(Constants.KEY_TIMESTAMP, new Date());
+
         database.collection(Constants.KEY_COLLECTION_CHAT).add(message);
 
         if (conversationId != null) {
@@ -176,12 +202,18 @@ public class ChatActivity extends BaseActivity {
             conversation.put(Constants.KEY_SENDER_NAME, preferenceManager.getString(Constants.KEY_NAME));
             conversation.put(Constants.KEY_RECEIVER_NAME, receiverUser.name);
             conversation.put(Constants.KEY_RECEIVER_IMAGE, receiverUser.image);
+            conversation.put(Constants.KEY_FCM_TOKEN, receiverUser.token);
+            Log.d("FCM", "Token: " + receiverUser.token);
             conversation.put(Constants.KEY_SENDER_IMAGE, preferenceManager.getString(Constants.KEY_IMAGE));
             addConversation(conversation);
         }
         binding.messageInput.setText(null); // Clear the message input
+
     }
 
+    private void updateConversationList(){
+
+    }
     // The init method sets up essential components:
     // 1. preferenceManager for managing preferences,
     // 2. chatMessages to hold chat data,
@@ -269,4 +301,84 @@ public class ChatActivity extends BaseActivity {
         super.onResume();
         listenAvailability();
     }
+
+    private void getToken() {
+        FirebaseMessaging.getInstance().getToken();
+        Log.d("FCM", "Token: " + preferenceManager.getString(Constants.KEY_FCM_TOKEN));
+    }
+
+    private void getLastMessage() {
+        // Only proceed if the receiver is unavailable and has a valid FCM token
+        if (!isReceiverAvailable && receiverUser.token != null) {
+            Log.d("Notification", "Receiver is unavailable and has a token. Fetching last message...");
+
+            // Query Firestore to get the latest message from the conversation collection
+            database.collection(Constants.KEY_COLLECTION_CONVERSATIONS)
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                    .limit(1)
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                            // Retrieve the last message document
+                            DocumentSnapshot document = task.getResult().getDocuments().get(0);
+
+                            // Extract last message and sender's name
+                            String lastMessage = document.getString(Constants.KEY_LAST_MESSAGE);
+                            String senderName = document.getString(Constants.KEY_SENDER_NAME);
+                            Log.d("Firestore", "Last Message: " + lastMessage);
+                            Log.d("Firestore", "Sender Name: " + senderName);
+                            Log.d("Token", "Token: " + receiverUser.token);
+                            // Send notification with last message
+                            sendNotification("New Message", senderName + ": " + lastMessage);
+
+                        } else {
+                            Log.d("Firestore", "No messages found in the conversation.");
+                        }
+                    })
+                    .addOnFailureListener(e -> Log.d("Firestore", "Error fetching last message", e));
+        } else {
+            Log.d("Notification", "Notification not sent because receiver is available or has no token.");
+        }
+    }
+
+    private void sendNotification(String title, String messageBody) {
+        // Double-check that receiver has a valid token before proceeding
+        if (receiverUser.token != null) {
+            Log.d("Notification", "Sending notification with title: " + title + " and message: " + messageBody);
+
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
+                    PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+
+            String channelId = "chat_notification_channel";
+            NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(this, channelId)
+                            .setSmallIcon(R.drawable.ic_notif)
+                            .setContentTitle(title)
+                            .setContentText(messageBody)
+                            .setAutoCancel(true)
+                            .setContentIntent(pendingIntent);
+
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            // Create a notification channel for Android Oreo and above
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(
+                        channelId,
+                        "Chat Notifications",
+                        NotificationManager.IMPORTANCE_HIGH);
+                notificationManager.createNotificationChannel(channel);
+                Log.d("Notification", "Notification channel created.");
+            }
+
+            // Use a unique ID to prevent overwriting notifications
+            notificationManager.notify((int) System.currentTimeMillis(), notificationBuilder.build());
+            Log.d("Notification", "Notification sent.");
+        } else {
+            Log.d("Notification", "Receiver token is null. Notification not sent.");
+        }
+    }
+
 }

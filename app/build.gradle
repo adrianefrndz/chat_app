@@ -39,6 +39,7 @@ dependencies {
     implementation libs.activity
     implementation libs.constraintlayout
     implementation libs.firebase.messaging
+    implementation libs.datastore.core.android
     //implementation libs.firebase.firestore
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
@@ -67,4 +68,9 @@ dependencies {
     // RetroFit
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
+
+    // Place picker
+    implementation 'com.google.android.libraries.places:places:2.6.0'
+    implementation 'com.google.android.gms:play-services-maps:18.0.2'
+
 }

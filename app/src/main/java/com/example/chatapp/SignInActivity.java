@@ -14,6 +14,9 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.chatapp.databinding.ActivitySignInBinding;
 import com.example.chatapp.utilities.Constants;
 import com.example.chatapp.utilities.PreferenceManager;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -23,6 +26,7 @@ public class SignInActivity extends AppCompatActivity {
 
     private ActivitySignInBinding binding;
     private PreferenceManager preferenceManager;
+    GoogleSignInClient googleSignInClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,8 +35,25 @@ public class SignInActivity extends AppCompatActivity {
         binding = ActivitySignInBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail() // Request user's email
+                .build(); // Build the GoogleSignInOptions object
+
+        googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
+
         setListeners();
         checkLoginState();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        googleSignInClient.signOut();
+        Intent intent = new Intent(SignInActivity.this, GoogleSignInActivity.class);
+
+        startActivity(intent);
+        finish();
     }
 
     private void checkLoginState() {

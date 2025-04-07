@@ -1,8 +1,13 @@
 package com.example.chatapp;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -11,6 +16,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -31,6 +37,7 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.SendException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,6 +83,7 @@ public class MainActivity extends BaseActivity implements ConversationListener {
 
     private void loadUserDetails() {
         // Load user details from SharedPreferences
+        // Bitmap
         binding.textUserName.setText(preferenceManager.getString(Constants.KEY_NAME));
         byte[] bytes = Base64.decode(preferenceManager.getString(Constants.KEY_IMAGE), Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
@@ -88,6 +96,7 @@ public class MainActivity extends BaseActivity implements ConversationListener {
 
     private void getToken() {
         FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::updateToken);
+        Log.d("FCM", "Token: " + preferenceManager.getString(Constants.KEY_FCM_TOKEN));
     }
 
     private void updateToken(String token) {
@@ -105,6 +114,11 @@ public class MainActivity extends BaseActivity implements ConversationListener {
         Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
         intent.putExtra(Constants.KEY_USER, user);
         startActivity(intent);
+    }
+
+    @Override
+    public void UpdateConversationList(User user){
+
     }
 
     private void signOut() {
@@ -139,6 +153,7 @@ public class MainActivity extends BaseActivity implements ConversationListener {
         if (error != null) {
             return;
         }
+        String message = "";
         if (value != null) {
             for (DocumentChange documentChange : value.getDocumentChanges()) {
                 if (documentChange.getType() == DocumentChange.Type.ADDED) {
@@ -160,6 +175,7 @@ public class MainActivity extends BaseActivity implements ConversationListener {
                     }
                     chatMessage.message = documentChange.getDocument().getString(Constants.KEY_LAST_MESSAGE);
                     chatMessage.dateObject = documentChange.getDocument().getDate(Constants.KEY_TIMESTAMP);
+                    message = chatMessage.message;
                     conversation.add(chatMessage);
 
                 } else if (documentChange.getType() == DocumentChange.Type.MODIFIED) {
@@ -170,6 +186,7 @@ public class MainActivity extends BaseActivity implements ConversationListener {
                         if (conversation.get(i).senderId.equals(senderId) && conversation.get(i).receiverId.equals(receiverId)) {
                             conversation.get(i).message = documentChange.getDocument().getString(Constants.KEY_LAST_MESSAGE);
                             conversation.get(i).dateObject = documentChange.getDocument().getDate(Constants.KEY_TIMESTAMP);
+                            message = conversation.get(i).message;
                             break;
                         }
                     }
@@ -180,6 +197,8 @@ public class MainActivity extends BaseActivity implements ConversationListener {
             binding.conversationRecyclerView.smoothScrollToPosition(0);
             binding.conversationRecyclerView.setVisibility(View.VISIBLE);
             binding.progressBar.setVisibility(View.GONE);
+
         }
     };
+
 }
