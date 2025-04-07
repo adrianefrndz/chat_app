@@ -36,7 +36,6 @@ import java.util.List;
 
 public class SignUpActivity extends AppCompatActivity {
 
-
     private static final int AUTOCOMPLETE_REQUEST_CODE = 1;
 
     private ActivitySignUpBinding binding;
